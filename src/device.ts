@@ -59,13 +59,16 @@ function encodePath(p: string): string {
 export class CrossPointDevice {
 	readonly base: string;
 
+	/** Called before each retry, e.g. to update a progress notice. */
+	onRetry: (what: string, attempt: number) => void = () => {};
+
 	constructor(host: string, private http: HttpFn, private timeoutMs = 15000) {
 		let h = host.trim().replace(/\/+$/, "");
 		if (!/^https?:\/\//i.test(h)) h = "http://" + h;
 		this.base = h;
 	}
 
-	private async req(r: HttpRequest, what: string, timeout = this.timeoutMs): Promise<HttpResponse> {
+	private async once(r: HttpRequest, what: string, timeout: number): Promise<HttpResponse> {
 		try {
 			return await withTimeout(this.http(r), timeout, what);
 		} catch (e) {
@@ -74,8 +77,32 @@ export class CrossPointDevice {
 		}
 	}
 
+	/**
+	 * Every request this client makes is safe to repeat (PUT replaces atomically,
+	 * MKCOL and DELETE tolerate "already done"), so transport failures and
+	 * timeouts are retried. HTTP error statuses are not: those are real answers.
+	 */
+	private async req(r: HttpRequest, what: string, timeout = this.timeoutMs, timeouts?: number[]): Promise<HttpResponse> {
+		const plan = timeouts ?? [timeout, timeout, timeout];
+		let lastErr: unknown;
+		for (const [i, t] of plan.entries()) {
+			if (i > 0) {
+				this.onRetry(what, i + 1);
+				await new Promise((res) => setTimeout(res, 1000 * i));
+			}
+			try {
+				return await this.once(r, what, t);
+			} catch (e) {
+				lastErr = e;
+			}
+		}
+		throw lastErr;
+	}
+
 	async status(): Promise<DeviceStatus> {
-		const r = await this.req({ url: `${this.base}/api/status`, method: "GET" }, "Reaching the reader", 5000);
+		// The reader's Wi-Fi and the first mDNS lookup can take several seconds to
+		// wake, so the first probe often times out; back off with longer waits.
+		const r = await this.req({ url: `${this.base}/api/status`, method: "GET" }, "Reaching the reader", 0, [6000, 8000, 12000]);
 		if (r.status !== 200) throw new DeviceError(`Reader answered ${r.status} on /api/status`);
 		try {
 			return JSON.parse(r.text) as DeviceStatus;

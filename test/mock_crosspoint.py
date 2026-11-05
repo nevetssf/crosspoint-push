@@ -5,6 +5,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 ROOT = sys.argv[1]
 LOG = []
+DROP = {"status": 0}  # number of upcoming /api/status requests to drop
 
 def fs(p): return os.path.join(ROOT, unquote(p).lstrip("/"))
 
@@ -18,6 +19,13 @@ class H(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
     def do_GET(self):
         u = urlparse(self.path)
+        if u.path == "/__drop_status":
+            DROP["status"] = int(parse_qs(u.query)["n"][0]); return self.send(200, "ok")
+        if u.path == "/api/status" and DROP["status"] > 0:
+            DROP["status"] -= 1
+            self.close_connection = True
+            self.connection.shutdown(2)  # simulate the reader's radio not answering
+            return
         if u.path == "/api/status":
             return self.send(200, json.dumps({"version": "2.0.0", "ip": "127.0.0.1", "mode": "STA", "device": "X4"}), "application/json")
         if u.path == "/api/files":

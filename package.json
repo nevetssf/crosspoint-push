@@ -1,6 +1,6 @@
 {
   "name": "crosspoint-push",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Push Obsidian notes to a CrossPoint e-reader as EPUB",
   "main": "main.js",
   "scripts": {

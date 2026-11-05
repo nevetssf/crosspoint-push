@@ -63,7 +63,17 @@ async function main() {
 		await device.remove("/Obsidian/Deep/Nested Dir/nothing.epub"); // 404 tolerated
 	});
 
-	await test("device: unreachable host fails fast with a clear message", async () => {
+	await test("device: first connection dropped, retry succeeds", async () => {
+		await http({ url: `http://${host}/__drop_status?n=1`, method: "GET" });
+		const retries: number[] = [];
+		device.onRetry = (_w, attempt) => retries.push(attempt);
+		const st = await device.status();
+		assert.equal(st.device, "X4");
+		assert.deepEqual(retries, [2]);
+		device.onRetry = () => {};
+	});
+
+	await test("device: unreachable host gives up with a clear message", async () => {
 		const dead = new CrossPointDevice("127.0.0.1:1", http);
 		await assert.rejects(dead.status(), /Reaching the reader/);
 	});

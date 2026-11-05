@@ -101,6 +101,7 @@ export default class CrossPointPushPlugin extends Plugin {
 
 		try {
 			const device = new CrossPointDevice(this.settings.host, makeHttp());
+			device.onRetry = (what, attempt) => progress(`${what}… retrying (attempt ${attempt})`);
 			try {
 				await device.status();
 			} catch (e) {
