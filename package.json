@@ -1,0 +1,27 @@
+{
+  "name": "crosspoint-push",
+  "version": "0.1.0",
+  "description": "Push Obsidian notes to a CrossPoint e-reader as EPUB",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "test": "node test/run.mjs"
+  },
+  "author": "nevetssf",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "builtin-modules": "^5.5.0",
+    "esbuild": "^0.28.2",
+    "obsidian": "^1.14.4",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "jszip": "^3.10.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nevetssf/crosspoint-push.git"
+  }
+}

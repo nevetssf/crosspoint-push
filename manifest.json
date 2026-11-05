@@ -1,0 +1,10 @@
+{
+  "id": "crosspoint-push",
+  "name": "CrossPoint Push",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.7",
+  "description": "Convert a vault folder to EPUB and push it to an Xteink reader running CrossPoint firmware over Wi-Fi.",
+  "author": "nevetssf",
+  "isDesktopOnly": false,
+  "authorUrl": "https://github.com/nevetssf"
+}
