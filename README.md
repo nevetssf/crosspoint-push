@@ -52,3 +52,7 @@ npm test        # runs against a mock CrossPoint server (needs python3)
 ```
 
 The tests cover EPUB packaging, the device client, folder-to-reader path mapping, and change detection/deletes. Markdown rendering needs Obsidian itself and isn't covered by them.
+
+## Releasing
+
+Bump `version` in `manifest.json` and `package.json`, add it to `versions.json`, commit, then push a matching tag (`git tag 0.1.1 && git push origin 0.1.1`). The Release workflow builds, runs the tests, and publishes `main.js` and `manifest.json`.
